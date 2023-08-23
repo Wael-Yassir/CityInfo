@@ -1,6 +1,16 @@
 using Microsoft.AspNetCore.StaticFiles;
+using Serilog;
+
+// It's applicable to use third-party library for logging on a file like Serilog
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Console()
+    .WriteTo.File("log/cityInfo.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog();
 
 builder.Services.AddControllers(option =>
     option.ReturnHttpNotAcceptable = false
