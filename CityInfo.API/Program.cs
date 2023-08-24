@@ -1,5 +1,7 @@
-using Microsoft.AspNetCore.StaticFiles;
 using Serilog;
+using CityInfo.API.Data;
+using CityInfo.API.Services.MailService;
+using Microsoft.AspNetCore.StaticFiles;
 
 // It's applicable to use third-party library for logging on a file like Serilog
 Log.Logger = new LoggerConfiguration()
@@ -21,6 +23,14 @@ builder.Services.AddControllers(option =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<FileExtensionContentTypeProvider>();        // to determine the file content type for file controller
+
+#if DEBUG
+builder.Services.AddTransient<IMailService, LocalMailService>();
+#else
+builder.Services.AddTransient<IMailService, CloudMailService>();
+#endif
+
+builder.Services.AddSingleton<CitiesDataStore>();
 
 var app = builder.Build();
 
