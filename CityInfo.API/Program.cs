@@ -1,12 +1,13 @@
 using Serilog;
 using CityInfo.API.Data;
-using CityInfo.API.Services.MailService;
-using Microsoft.AspNetCore.StaticFiles;
 using CityInfo.API.DbContexts;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.StaticFiles;
+using CityInfo.API.Services.MailService;
+using CityInfo.API.Services.Repositories;
 
 // It's applicable to use third-party library for logging on a file like Serilog
-  Log.Logger = new LoggerConfiguration()
+Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
     .WriteTo.Console()
     .WriteTo.File("log/cityInfo.txt", rollingInterval: RollingInterval.Day)
@@ -37,6 +38,10 @@ builder.Services.AddDbContext<CityInfoContext>(contextOptions =>
 {
     contextOptions.UseSqlite(builder.Configuration["ConnectionStrings:CityInfoDBConnectionString"]);
 });
+
+builder.Services.AddScoped<ICityInfoRepository, CityInfoRepository>();
+
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 var app = builder.Build();
 
