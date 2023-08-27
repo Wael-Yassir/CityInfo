@@ -1,4 +1,5 @@
 ﻿using CityInfo.API.Entities;
+using CityInfo.API.Services.Pagination;
 
 namespace CityInfo.API.Services.Repositories
 {
@@ -13,6 +14,9 @@ namespace CityInfo.API.Services.Repositories
 
         Task<IEnumerable<City>> GetCitiesAsync();
         
+        Task<(IEnumerable<City>, PaginationMetadata)> 
+            GetCitiesAsync(string? name, string? searchQuery, int pageNumber, int pageSize);    // for filtering by city name
+
         Task<City?> GetCityAsync(int cityId, bool includePointsOfInterest);
         
         Task<bool> CityExistsAsync(int cityId);

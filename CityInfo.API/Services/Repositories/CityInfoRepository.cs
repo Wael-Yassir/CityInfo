@@ -1,6 +1,7 @@
 ﻿using CityInfo.API.Entities;
 using CityInfo.API.DbContexts;
 using Microsoft.EntityFrameworkCore;
+using CityInfo.API.Services.Pagination;
 
 namespace CityInfo.API.Services.Repositories
 {
@@ -16,6 +17,39 @@ namespace CityInfo.API.Services.Repositories
         public async Task<IEnumerable<City>> GetCitiesAsync()
         {
             return await _context.Citites.OrderBy(c => c.Name).ToListAsync();
+        }
+
+        public async Task<(IEnumerable<City>, PaginationMetadata)> 
+            GetCitiesAsync(string? name, string? searchQuery, int pageNumber, int pageSize)
+        {          
+            // Cast to IQueryable help build the query before executing it on db
+            var collection = _context.Citites as IQueryable<City>;
+
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                name = name.Trim();
+                collection = collection.Where(c => c.Name == name);
+            }    
+
+            if(!string.IsNullOrWhiteSpace(searchQuery))
+            {
+                searchQuery = searchQuery.Trim();
+                collection = collection
+                    .Where(
+                        c => c.Name.Contains(searchQuery) ||
+                        (c.Description != null && c.Description.Contains(searchQuery))
+                    );
+            }
+
+            var totalItemNumber = await collection.CountAsync();
+            var paginationMetadata = new PaginationMetadata(totalItemNumber, pageNumber, pageSize);
+
+            var collectionToReturn = await collection.OrderBy(c => c.Name)
+                .Skip(pageSize * (pageNumber - 1))
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (collectionToReturn, paginationMetadata);
         }
 
         public async Task<City?>
