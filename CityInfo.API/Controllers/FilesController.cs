@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CityInfo.API.Controllers
 {
     [ApiController]
+    [Authorize(Policy = "MustBeFromAntwerp")]
     [Route("api/[controller]")]
     public class FilesController : ControllerBase
     {

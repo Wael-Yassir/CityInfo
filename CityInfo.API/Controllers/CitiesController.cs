@@ -1,13 +1,14 @@
 ﻿using AutoMapper;
-using CityInfo.API.Data;
+using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 using CityInfo.API.Models.Cities;
 using CityInfo.API.Services.Repositories;
-using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CityInfo.API.Controllers
 {
     [ApiController]             // helps returning problems details
+    [Authorize]
     [Route("api/[controller]")]
     public class CitiesController : ControllerBase
     {
@@ -30,6 +31,8 @@ namespace CityInfo.API.Controllers
         public async Task<ActionResult<IEnumerable<CityDtoWithoutPointsOfInterest>>>
             GetCities(string? name, string? searchQuery, int pageNumber = 1, int pageSize = 10)
         {
+            // Information from token can be accesed through: User.Claims;
+
             if (pageSize > _maxCitiesPageSize) pageSize = _maxCitiesPageSize;
 
             var (cityEntities, paginationMetadata) = await _cityInfoRepository

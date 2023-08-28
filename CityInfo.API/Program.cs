@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.StaticFiles;
 using CityInfo.API.Services.MailService;
 using CityInfo.API.Services.Repositories;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 // It's applicable to use third-party library for logging on a file like Serilog
 Log.Logger = new LoggerConfiguration()
@@ -43,6 +45,33 @@ builder.Services.AddScoped<ICityInfoRepository, CityInfoRepository>();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new()
+        {
+            ValidateAudience = true,
+            ValidateIssuer = true,
+            ValidateIssuerSigningKey = true,
+            ValidAudience = builder.Configuration["Authentication:Audience"],
+            ValidIssuer = builder.Configuration["Authentication:Issuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.ASCII.GetBytes(builder.Configuration["Authentication:SecretKey"]))
+        };
+    });
+
+// Authorization based on claims called ABAC/CBAC/PBAC:
+// attribute-based, claims-based, policy-based access control
+// for more complex scenario, RBAC: role-based access control is used
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("MustBeFromAntwerp", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim("city", "Antwerp");
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -55,6 +84,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseRouting();
+
+app.UseAuthentication();
 
 /*
  To setup endpoint routing, two pieces of middleware can be used:

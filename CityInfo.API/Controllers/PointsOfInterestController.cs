@@ -5,10 +5,12 @@ using Microsoft.AspNetCore.JsonPatch;
 using CityInfo.API.Services.MailService;
 using CityInfo.API.Services.Repositories;
 using CityInfo.API.Models.PointsOfInterest;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CityInfo.API.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/Cities/{cityId}/[controller]")]
     public class PointsOfInterestController : ControllerBase
     {
