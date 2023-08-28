@@ -1,4 +1,5 @@
 using Serilog;
+using System.Text;
 using CityInfo.API.Data;
 using CityInfo.API.DbContexts;
 using Microsoft.EntityFrameworkCore;
@@ -6,7 +7,7 @@ using Microsoft.AspNetCore.StaticFiles;
 using CityInfo.API.Services.MailService;
 using CityInfo.API.Services.Repositories;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using Microsoft.OpenApi.Models;
 
 // It's applicable to use third-party library for logging on a file like Serilog
 Log.Logger = new LoggerConfiguration()
@@ -21,13 +22,41 @@ builder.Host.UseSerilog();
 
 builder.Services.AddControllers(option =>
     option.ReturnHttpNotAcceptable = false
-)   
+)
     .AddNewtonsoftJson()
-    .AddXmlDataContractSerializerFormatters();                            // to support different format for the response based on Accept header
+    .AddXmlDataContractSerializerFormatters();      // to support different format for the response based on Accept header
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<FileExtensionContentTypeProvider>();        // to determine the file content type for file controller
+builder.Services.AddEndpointsApiExplorer();         // exposes information on the available endpoint and how to interact with them (help generate OpenAPI specs)
+// register required services to generate the OpenAPI specification
+builder.Services.AddSwaggerGen(setupAction =>
+{
+    // To add Authuntication button to swagger
+    setupAction.AddSecurityDefinition(
+        "CityInfoBearerAuth",
+        new OpenApiSecurityScheme()
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = "Bearer",
+            Description = "Input a valid token to access this API"
+        });
+
+    setupAction.AddSecurityRequirement(new OpenApiSecurityRequirement       // a dictionary
+    {
+        {
+            new OpenApiSecurityScheme
+            { 
+                Reference = new OpenApiReference { 
+                    Type = ReferenceType.SecurityScheme, 
+                    Id = "CityInfoBearerAuth" 
+                }
+            },
+            new List<string>()
+        }
+    });
+});
+
+// to determine the file content type for file controller
+builder.Services.AddSingleton<FileExtensionContentTypeProvider>();
 
 #if DEBUG
 builder.Services.AddTransient<IMailService, LocalMailService>();
@@ -72,13 +101,20 @@ builder.Services.AddAuthorization(options =>
     });
 });
 
+builder.Services.AddApiVersioning(setupAction =>
+{
+    setupAction.AssumeDefaultVersionWhenUnspecified = true;
+    setupAction.DefaultApiVersion = new Microsoft.AspNetCore.Mvc.ApiVersion(1, 0);
+    setupAction.ReportApiVersions = true;
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwagger();           // generate OpenAPI specification
+    app.UseSwaggerUI();         // generate UI using swagger UI based on the generated OpenAPI specifications
 }
 
 app.UseHttpsRedirection();

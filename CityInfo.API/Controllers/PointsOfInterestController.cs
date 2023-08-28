@@ -11,7 +11,9 @@ namespace CityInfo.API.Controllers
 {
     [ApiController]
     [Authorize]
-    [Route("api/Cities/{cityId}/[controller]")]
+    [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
+    [Route("api/v{version:apiVersion}/Cities/{cityId}/[controller]")]
     public class PointsOfInterestController : ControllerBase
     {
         private readonly ILogger<PointsOfInterestController> _logger;

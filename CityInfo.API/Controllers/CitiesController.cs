@@ -9,7 +9,8 @@ namespace CityInfo.API.Controllers
 {
     [ApiController]             // helps returning problems details
     [Authorize]
-    [Route("api/[controller]")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     public class CitiesController : ControllerBase
     {
         private readonly IMapper _mapper;
